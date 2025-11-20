@@ -1,0 +1,69 @@
+-- ~/.config/nvim/lua/plugins/minuet.lua
+return {
+  -- LuaSnip
+  {
+    "L3MON4D3/LuaSnip",
+    dependencies = { "rafamadriz/friendly-snippets" },
+    event = "InsertEnter",
+    config = function()
+      require("luasnip.loaders.from_vscode").lazy_load()
+    end,
+  },
+
+  -- Minuet + Blink
+  {
+    "milanglacier/minuet-ai.nvim",
+    dependencies = { "saghen/blink.cmp", "nvim-lua/plenary.nvim" },
+    event = "InsertEnter",
+    config = function()
+      require("minuet").setup({
+        virtualtext = {
+          auto_trigger_ft = { "lua", "python", "javascript", "typescript" },
+          min_prefix_length = 3,
+          debounce_ms = 300,
+          keymap = { accept = "<A-L>", accept_line = "<A-l>", dismiss = "<A-h>" },
+        },
+      })
+
+      require("blink.cmp").setup({
+        keymap = {
+          show = "<C-Space>",
+          hide = "<C-e>",
+          accept = "<CR>",
+          select_next = "<Down>",
+          select_prev = "<Up>",
+        },
+        sources = {
+          default = { "lsp", "path", "buffer", "snippets", "minuet" },
+          providers = {
+            lsp = { name = "LSP", module = "blink.cmp.sources.lsp" },
+            path = { name = "Path", module = "blink.cmp.sources.path" },
+            buffer = { name = "Buffer", module = "blink.cmp.sources.buffer" },
+            snippets = { name = "LuaSnip", module = "blink.cmp.sources.luasnip" },
+            minuet = {
+              name = "Minuet AI",
+              module = "minuet.blink",
+              async = true,
+              timeout_ms = 10000,
+              score_offset = 90,
+            },
+          },
+        },
+      })
+
+      -- <Tab> só para LuaSnip
+      vim.schedule(function()
+        local ls = require("luasnip")
+        if ls then
+          vim.keymap.set({ "i", "s" }, "<Tab>", function()
+            if ls.expand_or_jumpable() then
+              ls.expand_or_jump()
+            else
+              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Tab>", true, true, true), "n", false)
+            end
+          end, { silent = true })
+        end
+      end)
+    end,
+  },
+}

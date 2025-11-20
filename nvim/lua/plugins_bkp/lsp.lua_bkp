@@ -1,0 +1,159 @@
+-- ~/.config/nvim/lua/plugins/lsp.lua
+return {
+  -- Extend LazyVim's Mason config
+  {
+    "mason-org/mason.nvim",
+    opts = {
+      ensure_installed = {
+        -- Python
+        "basedpyright",
+        "ruff",
+        -- JavaScript/TypeScript
+        "typescript-language-server", -- Nome correto no Mason
+        -- Outros
+        "stylua",
+        "shellcheck",
+        "shfmt",
+      },
+    },
+  },
+
+  -- Configurar LSP servers
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      -- Configurar diagnósticos
+      diagnostics = {
+        underline = true,
+        update_in_insert = false,
+        virtual_text = {
+          spacing = 4,
+          source = "if_many",
+          prefix = "●",
+        },
+        severity_sort = true,
+        float = {
+          border = "rounded",
+          source = "always",
+        },
+      },
+
+      -- Inlay hints
+      inlay_hints = {
+        enabled = true,
+      },
+
+      -- Configuração dos servers
+      servers = {
+        -- Python: Basedpyright
+        basedpyright = {
+          capabilities = {}, -- Capabilities por server
+          settings = {
+            basedpyright = {
+              analysis = {
+                autoSearchPaths = true,
+                diagnosticMode = "openFilesOnly",
+                useLibraryCodeForTypes = true,
+                typeCheckingMode = "standard",
+                autoImportCompletions = true,
+                diagnosticSeverityOverrides = {
+                  reportUnusedImport = "information",
+                  reportUnusedVariable = "information",
+                  reportDuplicateImport = "warning",
+                },
+              },
+            },
+          },
+        },
+
+        -- Python: Ruff
+        ruff = {
+          capabilities = {},
+          init_options = {
+            settings = {
+              args = {},
+              organizeImports = true,
+              fixAll = true,
+            },
+          },
+        },
+
+        -- Lua
+        lua_ls = {
+          capabilities = {},
+          settings = {
+            Lua = {
+              workspace = {
+                checkThirdParty = false,
+              },
+              completion = {
+                callSnippet = "Replace",
+              },
+              hint = {
+                enable = true,
+                setType = true,
+              },
+            },
+          },
+        },
+
+        -- TypeScript (nome correto: ts_ls)
+        ts_ls = {
+          capabilities = {},
+          settings = {
+            typescript = {
+              inlayHints = {
+                includeInlayParameterNameHints = "all",
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+              },
+            },
+            javascript = {
+              inlayHints = {
+                includeInlayParameterNameHints = "all",
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+              },
+            },
+          },
+        },
+      },
+
+      -- Setup customizado por server
+      setup = {
+        -- Ruff: formatar ao salvar
+        ruff = function(_, opts)
+          local lspconfig = require("lspconfig")
+          lspconfig.ruff.setup(opts)
+
+          -- Desabilitar hover do Ruff e formatar ao salvar
+          vim.api.nvim_create_autocmd("LspAttach", {
+            callback = function(args)
+              local client = vim.lsp.get_client_by_id(args.data.client_id)
+              if client and client.name == "ruff" then
+                -- Desabilitar hover
+                client.server_capabilities.hoverProvider = false
+
+                -- Formatar ao salvar
+                vim.api.nvim_create_autocmd("BufWritePre", {
+                  buffer = args.buf,
+                  callback = function()
+                    vim.lsp.buf.format({
+                      async = false,
+                      timeout_ms = 2000,
+                      filter = function(c)
+                        return c.name == "ruff"
+                      end,
+                    })
+                  end,
+                })
+              end
+            end,
+          })
+
+          return true
+        end,
+      },
+    },
+  },
+}

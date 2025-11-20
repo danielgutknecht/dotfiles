@@ -1,0 +1,31 @@
+-- ~/.config/nvim/lua/plugins/linting.lua
+return {
+  {
+    "mfussenegger/nvim-lint",
+    event = { "BufReadPre", "BufNewFile" },
+    config = function()
+      local lint = require("lint")
+
+      lint.linters_by_ft = {
+        python = { "ruff" },
+      }
+
+      -- Configuração customizada do ruff (opcional)
+      lint.linters.ruff.args = {
+        "--format=text",
+        "--stdin-filename",
+        "$FILENAME",
+        "-",
+      }
+
+      local lint_augroup = vim.api.nvim_create_augroup("linting", { clear = true })
+
+      vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+        group = lint_augroup,
+        callback = function()
+          lint.try_lint()
+        end,
+      })
+    end,
+  },
+}

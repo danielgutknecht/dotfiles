@@ -1,0 +1,184 @@
+-- ~/.config/nvim/lua/plugins/minuet.lua
+return {
+  -- LuaSnip
+  {
+    "L3MON4D3/LuaSnip",
+    dependencies = { "rafamadriz/friendly-snippets" },
+    event = "InsertEnter",
+    opts = {
+      history = true,
+      delete_check_events = "TextChanged",
+      updateevents = "TextChanged,TextChangedI",
+    },
+    config = function(_, opts)
+      local ls = require("luasnip")
+      ls.setup(opts)
+      require("luasnip.loaders.from_vscode").lazy_load()
+
+      -- Keymaps para LuaSnip
+      vim.keymap.set({ "i", "s" }, "<Tab>", function()
+        if ls.expand_or_jumpable() then
+          ls.expand_or_jump()
+        else
+          return "<Tab>"
+        end
+      end, { silent = true, expr = true })
+
+      vim.keymap.set({ "i", "s" }, "<S-Tab>", function()
+        if ls.jumpable(-1) then
+          ls.jump(-1)
+        else
+          return "<S-Tab>"
+        end
+      end, { silent = true, expr = true })
+    end,
+  },
+
+  -- Minuet AI
+  {
+    "milanglacier/minuet-ai.nvim",
+    dependencies = {
+      "saghen/blink.cmp",
+      "nvim-lua/plenary.nvim",
+      "L3MON4D3/LuaSnip",
+    },
+    event = "InsertEnter",
+    opts = function()
+      return {
+        provider = "openai", -- ou "claude", "gemini", "codestral"
+        -- openai = {
+        --   api_key = vim.env.OPENAI_API_KEY or "sk-...",
+        --   model = "gpt-4o-mini",
+        -- },
+        virtualtext = {
+          auto_trigger_ft = {
+            "lua",
+            "python",
+            "javascript",
+            "typescript",
+            "javascriptreact",
+            "typescriptreact",
+            "rust",
+            "go",
+          },
+          min_prefix_length = 3,
+          debounce_ms = 300,
+          max_tokens = 512,
+          keymap = {
+            accept = "<A-L>",
+            accept_line = "<A-l>",
+            prev = "<A-[>",
+            next = "<A-]>",
+            dismiss = "<A-h>",
+          },
+        },
+        notify = "warn",
+        request_timeout = 10,
+      }
+    end,
+    config = function(_, opts)
+      require("minuet").setup(opts)
+    end,
+  },
+
+  -- Blink.cmp
+  {
+    "saghen/blink.cmp",
+    dependencies = "rafamadriz/friendly-snippets",
+    version = "*",
+    event = "InsertEnter",
+    opts = {
+      keymap = {
+        preset = "default",
+        ["<C-Space>"] = { "show", "show_documentation", "hide_documentation" },
+        ["<C-e>"] = { "hide" },
+        ["<CR>"] = { "accept", "fallback" },
+        ["<C-k>"] = { "select_prev", "fallback" },
+        ["<C-j>"] = { "select_next", "fallback" },
+        ["<Up>"] = { "select_prev", "fallback" },
+        ["<Down>"] = { "select_next", "fallback" },
+        ["<C-b>"] = { "scroll_documentation_up", "fallback" },
+        ["<C-f>"] = { "scroll_documentation_down", "fallback" },
+      },
+
+      appearance = {
+        use_nvim_cmp_as_default = true,
+        nerd_font_variant = "mono",
+      },
+
+      completion = {
+        accept = {
+          auto_brackets = { enabled = true },
+        },
+        menu = {
+          draw = {
+            columns = { { "label", "label_description", gap = 1 }, { "kind_icon", "kind" } },
+          },
+        },
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 500,
+        },
+        ghost_text = {
+          enabled = true,
+        },
+      },
+
+      signature = {
+        enabled = true,
+      },
+
+      sources = {
+        default = { "lsp", "path", "snippets", "buffer", "minuet" },
+        per_filetype = {
+          lua = { "lsp", "path", "snippets", "buffer", "minuet" },
+          python = { "lsp", "path", "snippets", "buffer", "minuet" },
+          -- Desabilitar minuet em arquivos de config
+          json = { "lsp", "path", "buffer" },
+          yaml = { "lsp", "path", "buffer" },
+        },
+        providers = {
+          lsp = {
+            name = "LSP",
+            module = "blink.cmp.sources.lsp",
+            score_offset = 100, -- Maior prioridade
+          },
+          path = {
+            name = "Path",
+            module = "blink.cmp.sources.path",
+            score_offset = 5,
+            opts = {
+              trailing_slash = false,
+              label_trailing_slash = true,
+              get_cwd = function(context)
+                return vim.fn.expand(("#%d:p:h"):format(context.bufnr))
+              end,
+            },
+          },
+          snippets = {
+            name = "Snippets",
+            module = "blink.cmp.sources.luasnip",
+            score_offset = 95,
+          },
+          buffer = {
+            name = "Buffer",
+            module = "blink.cmp.sources.buffer",
+            score_offset = 3,
+            max_items = 5,
+          },
+          minuet = {
+            name = "Minuet",
+            module = "minuet.blink",
+            async = true,
+            timeout_ms = 10000,
+            score_offset = 90,
+            max_items = 3,
+          },
+        },
+      },
+    },
+    config = function(_, opts)
+      require("blink.cmp").setup(opts)
+    end,
+  },
+}

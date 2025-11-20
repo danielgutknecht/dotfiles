@@ -1,0 +1,32 @@
+return {
+  -- Plugin Supermaven
+  {
+    "supermaven-inc/supermaven-nvim",
+    event = "InsertEnter",
+    cmd = { "SupermavenUseFree", "SupermavenUsePro" },
+    opts = {
+      keymaps = {
+        accept_suggestion = nil, -- deixa o nvim-cmp lidar com isso
+      },
+      disable_inline_completion = false, -- ativa sugestões inline
+      ignore_filetypes = { "bigfile", "snacks_input", "snacks_notif" },
+    },
+  },
+
+  -- Integração com nvim-cmp
+  {
+    "hrsh7th/nvim-cmp",
+    opts = function(_, opts)
+      -- Adiciona fontes padrão se não estiverem presentes
+      opts.sources = opts.sources or {}
+
+      -- Aqui você pode adicionar outras fontes se quiser
+      vim.list_extend(opts.sources, {
+        { name = "nvim_lsp" },
+        { name = "buffer" },
+        { name = "path" },
+        { name = "luasnip" },
+      })
+    end,
+  },
+}

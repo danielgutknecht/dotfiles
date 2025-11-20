@@ -1,0 +1,14 @@
+-- Keymaps are automatically loaded on the VeryLazy event
+-- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
+-- Add any additional keymaps here
+--
+--
+-- Organize Imports
+--vim.keymap.set("n", "<leader>co", function()
+--  vim.lsp.buf.code_action({ context = { only = { "source.organizeImports" } }, apply = true })
+--end, { desc = "Organize Imports" })
+
+-- Fix All
+--vim.keymap.set("n", "<leader>cf", function()
+--  vim.lsp.buf.code_action({ context = { only = { "source.fixAll" } }, apply = true })
+--end, { desc = "Fix All" })

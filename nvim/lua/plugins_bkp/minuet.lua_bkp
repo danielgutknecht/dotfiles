@@ -1,0 +1,70 @@
+return {
+  {
+    "milanglacier/minuet-ai.nvim",
+    dependencies = {
+      "saghen/blink.cmp",
+    },
+    config = function()
+      require("minuet").setup({
+        --request_timeout = 3,
+        --model = "default", -- ou "gpt-4", "claude-3", "mistral", etc.
+        provider_options = {
+          gemini = {
+            optional = {
+              generationConfig = {
+                maxOutputTokens = 256,
+                -- When using `gemini-2.5-flash`, it is recommended to entirely
+                -- disable thinking for faster completion retrieval.
+                thinkingConfig = {
+                  thinkingBudget = 0,
+                },
+              },
+              safetySettings = {
+                {
+                  -- HARM_CATEGORY_HATE_SPEECH,
+                  -- HARM_CATEGORY_HARASSMENT
+                  -- HARM_CATEGORY_SEXUALLY_EXPLICIT
+                  category = "HARM_CATEGORY_DANGEROUS_CONTENT",
+                  -- BLOCK_NONE
+                  threshold = "BLOCK_ONLY_HIGH",
+                },
+              },
+            },
+          },
+        },
+      })
+
+      require("blink-cmp").setup({
+        keymap = {
+          ["<Tab>"] = require("minuet").make_blink_map(),
+        },
+        sources = {
+          default = { "lsp", "path", "buffer", "snippets", "minuet" },
+          providers = {
+            minuet = {
+              name = "minuet",
+              module = "minuet.blink",
+              async = true,
+              timeout_ms = 3000,
+              score_offset = 50,
+            },
+          },
+        },
+        completion = {
+          trigger = {
+            prefetch_on_insert = false,
+          },
+        },
+      })
+    end,
+  },
+
+  {
+    "hrsh7th/nvim-cmp",
+    opts = function(_, opts)
+      vim.list_extend(opts.sources, {
+        { name = "blink" },
+      })
+    end,
+  },
+}

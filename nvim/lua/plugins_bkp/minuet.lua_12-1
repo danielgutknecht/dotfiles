@@ -1,0 +1,182 @@
+-- ~/.config/nvim/lua/plugins/minuet.lua
+-- LazyVim: https://www.lazyvim.org
+return {
+  -- Minuet AI - Autocompletion com IA
+  {
+    "milanglacier/minuet-ai.nvim",
+    dependencies = {
+      "saghen/blink.cmp",
+      "nvim-lua/plenary.nvim",
+      "echasnovski/mini.snippets",
+    },
+    event = "InsertEnter",
+    opts = function()
+      return {
+        provider = "gemini", -- ou "claude", "gemini", "openai"
+
+        -- Configurações por provider
+        codestral = {
+          api_key = vim.env.CODESTRAL_API_KEY,
+          model = "codestral-latest",
+          max_tokens = 512,
+        },
+        gemini = {
+          api_key = vim.env.GEMINI_API_KEY,
+          model = "gemini-2.0-flash",
+          max_tokens = 512,
+        },
+
+        claude = {
+          api_key = vim.env.ANTHROPIC_API_KEY,
+          model = "claude-sonnet-4-20250514",
+          max_tokens = 512,
+        },
+
+        openai = {
+          api_key = vim.env.OPENAI_API_KEY,
+          model = "gpt-4o-mini",
+          max_tokens = 512,
+        },
+
+        -- Configuração de virtualtext (sugestões inline)
+        virtualtext = {
+          auto_trigger_ft = {
+            -- Languages
+            "lua",
+            "python",
+            "javascript",
+            "typescript",
+            "javascriptreact",
+            "typescriptreact",
+            "rust",
+            "go",
+            "c",
+            "cpp",
+            "java",
+            "php",
+            -- Web
+            "html",
+            "css",
+            "scss",
+            "vue",
+            "svelte",
+            -- Data
+            "json",
+            "yaml",
+            "toml",
+            -- Docs
+            "markdown",
+            "tex",
+          },
+
+          -- Trigger mais responsivo
+          min_prefix_length = 2,
+          debounce_ms = 200,
+          max_tokens = 512,
+
+          -- Keymaps intuitivos
+          keymap = {
+            accept = "<A-L>", -- Alt+Shift+L: aceita tudo
+            accept_line = "<A-l>", -- Alt+L: aceita linha
+            prev = "<A-[>", -- Alt+[: sugestão anterior
+            next = "<A-]>", -- Alt+]: próxima sugestão
+            dismiss = "<A-h>", -- Alt+H: dispensar
+          },
+        },
+
+        -- Contexto para melhor compreensão
+        context_window = {
+          max_lines_before = 50,
+          max_lines_after = 20,
+        },
+
+        -- Notificações apenas para warnings/erros
+        notify = "warn",
+
+        -- Timeout generoso para APIs lentas
+        request_timeout = 15,
+
+        -- Throttling para evitar muitas requisições
+        throttle = {
+          enabled = true,
+          max_requests_per_minute = 30,
+        },
+      }
+    end,
+    config = function(_, opts)
+      require("minuet").setup(opts)
+
+      -- Notificação de inicialização
+      vim.notify("Minuet AI carregado com provider: " .. opts.provider, vim.log.levels.INFO)
+    end,
+  },
+
+  -- Blink.cmp - Autocompletion engine
+  {
+    "saghen/blink.cmp",
+    version = "*",
+    event = "InsertEnter",
+    opts = {
+      keymap = {
+        preset = "default",
+
+        -- Controles principais
+        ["<C-Space>"] = { "show", "show_documentation", "hide_documentation" },
+        ["<C-e>"] = { "hide" },
+        ["<CR>"] = { "accept", "fallback" },
+
+        -- Navegação com Ctrl+j/k (Vim-style)
+        ["<C-k>"] = { "select_prev", "fallback" },
+        ["<C-j>"] = { "select_next", "fallback" },
+
+        -- Navegação com setas (fallback)
+        ["<Up>"] = { "select_prev", "fallback" },
+        ["<Down>"] = { "select_next", "fallback" },
+
+        -- Scroll de documentação
+        ["<C-b>"] = { "scroll_documentation_up", "fallback" },
+        ["<C-f>"] = { "scroll_documentation_down", "fallback" },
+
+        -- Snippets
+        ["<Tab>"] = { "snippet_forward", "fallback" },
+        ["<S-Tab>"] = { "snippet_backward", "fallback" },
+      },
+
+      appearance = {
+        use_nvim_cmp_as_default = true,
+        nerd_font_variant = "mono",
+      },
+
+      completion = {
+        accept = {
+          auto_brackets = { enabled = true },
+        },
+        menu = {
+          draw = {
+            columns = {
+              { "kind_icon" },
+              { "label", "label_description", gap = 1 },
+              { "kind" },
+            },
+          },
+        },
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 200,
+        },
+      },
+
+      -- Fontes de completação
+      sources = {
+        default = { "lsp", "path", "snippets", "buffer" },
+        providers = {
+          minuet = {
+            name = "minuet",
+            module = "minuet.blink",
+            score_offset = 100, -- Prioridade alta
+          },
+        },
+      },
+    },
+  },
+}

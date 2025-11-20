@@ -1,0 +1,84 @@
+-- Autocmds are automatically loaded on the VeryLazy event
+-- Default autocmds: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/autocmds.lua
+-- Add any additional autocmds here
+
+local function augroup(name)
+  return vim.api.nvim_create_augroup("lazyvim_" .. name, { clear = true })
+end
+
+-- === Mostra diagnóstico flutuante ao parar o cursor (melhorado) ===
+vim.api.nvim_create_autocmd("CursorHold", {
+  group = augroup("diagnostic_float"),
+  callback = function()
+    -- Evita abrir múltiplas janelas
+    if vim.b.diagnostic_float_open then
+      return
+    end
+    vim.b.diagnostic_float_open = true
+
+    local win_id = vim.diagnostic.open_float(nil, {
+      focus = false,
+      close_events = { "CursorMoved", "CursorMovedI", "BufHidden", "InsertEnter" },
+      border = "rounded",
+      source = "if_many",
+      scope = "cursor",
+      header = "",
+      prefix = " ",
+    })
+
+    if win_id then
+      -- Fecha automaticamente ao mover cursor
+      vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertEnter" }, {
+        buffer = 0,
+        once = true,
+        callback = function()
+          if vim.api.nvim_win_is_valid(win_id) then
+            vim.api.nvim_win_close(win_id, true)
+          end
+          vim.b.diagnostic_float_open = false
+        end,
+      })
+    end
+  end,
+})
+
+-- === Highlight on yank (já vem no LazyVim, mas reforçando) ===
+vim.api.nvim_create_autocmd("TextYankPost", {
+  group = augroup("highlight_yank"),
+  callback = function()
+    vim.highlight.on_yank({ higroup = "IncSearch", timeout = 150 })
+  end,
+})
+
+-- === Auto resize panes when window is resized ===
+vim.api.nvim_create_autocmd("VimResized", {
+  group = augroup("resize_splits"),
+  callback = function()
+    local current_tab = vim.fn.tabpagenr()
+    vim.cmd("tabdo wincmd =")
+    vim.cmd("tabnext " .. current_tab)
+  end,
+})
+
+-- === Close certain filetypes with 'q' ===
+vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("close_with_q"),
+  pattern = {
+    "PlenaryTestPopup",
+    "help",
+    "lspinfo",
+    "man",
+    "notify",
+    "qf",
+    "query",
+    "spectre_panel",
+    "startuptime",
+    "tsplayground",
+    "neotest-output",
+    "neotest-summary",
+  },
+  callback = function(event)
+    vim.bo[event.buf].buflisted = false
+    vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = event.buf, silent = true })
+  end,
+})

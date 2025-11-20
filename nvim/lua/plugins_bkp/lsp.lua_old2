@@ -1,0 +1,116 @@
+return {
+  {
+    "mason-org/mason.nvim",
+    opts = {
+      ensure_installed = {
+        "pyright", -- substitui basedpyright
+        "ruff",
+        "typescript-language-server",
+        "stylua",
+        "shellcheck",
+        "shfmt",
+        "prettier",
+      },
+    },
+  },
+
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      diagnostics = {
+        underline = true,
+        update_in_insert = false,
+        virtual_text = { spacing = 4, source = "if_many", prefix = "●" },
+        severity_sort = true,
+        float = { border = "rounded", source = "always" },
+      },
+      inlay_hints = { enabled = true },
+
+      servers = {
+        pyright = {
+          settings = {
+            python = {
+              analysis = {
+                autoSearchPaths = true,
+                useLibraryCodeForTypes = true,
+                typeCheckingMode = "basic", -- menos restritivo
+                autoImportCompletions = true, -- ativa auto-import
+              },
+            },
+          },
+        },
+
+        ruff = {
+          keys = {
+            {
+              "<leader>co",
+              function()
+                vim.lsp.buf.code_action({
+                  context = { only = { "source.organizeImports" } },
+                  apply = true,
+                })
+              end,
+              desc = "Organize Imports (Ruff)",
+            },
+            {
+              "<leader>cf",
+              function()
+                vim.lsp.buf.code_action({
+                  context = { only = { "source.fixAll" } },
+                  apply = true,
+                })
+              end,
+              desc = "Fix All (Ruff)",
+            },
+          },
+          settings = {
+            organizeImports = true,
+            fixAll = true,
+          },
+        },
+
+        lua_ls = {
+          settings = {
+            Lua = {
+              workspace = { checkThirdParty = false },
+              completion = { callSnippet = "Replace" },
+              hint = { enable = true, setType = true },
+            },
+          },
+        },
+
+        ["typescript-language-server"] = {
+          settings = {
+            typescript = {
+              inlayHints = {
+                includeInlayParameterNameHints = "all",
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+              },
+            },
+            javascript = {
+              inlayHints = {
+                includeInlayParameterNameHints = "all",
+                includeInlayFunctionParameterTypeHints = true,
+                includeInlayVariableTypeHints = true,
+              },
+            },
+          },
+        },
+      },
+
+      setup = {
+        ruff = function()
+          vim.api.nvim_create_autocmd("LspAttach", {
+            callback = function(args)
+              local client = vim.lsp.get_client_by_id(args.data.client_id)
+              if client and client.name == "ruff" then
+                client.server_capabilities.hoverProvider = false
+              end
+            end,
+          })
+        end,
+      },
+    },
+  },
+}
