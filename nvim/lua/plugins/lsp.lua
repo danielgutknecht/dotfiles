@@ -84,7 +84,7 @@ return {
         ["<C-f>"] = { "scroll_documentation_down", "fallback" },
       },
       sources = {
-        default = { "lsp", "path", "snippets", "buffer" },
+        default = { "lsp", "snippets", "buffer", "path" },
       },
       appearance = {
         use_nvim_cmp_as_default = true,
@@ -104,7 +104,7 @@ return {
     event = "BufWritePre",
     opts = {
       formatters_by_ft = {
-        python = { "isort", "black" },
+        python = { "black", "isort" },
         lua = { "stylua" },
         javascript = { "prettier" },
         typescript = { "prettier" },

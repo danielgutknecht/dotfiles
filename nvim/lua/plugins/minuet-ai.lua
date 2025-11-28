@@ -17,7 +17,7 @@ return {
       },
     },
     virtualtext = {
-      enabled = true, -- ATIVADO
+      enabled = false, -- ATIVADO/DESATIVADO
       auto_trigger_ft = {
         "lua",
         "python",
